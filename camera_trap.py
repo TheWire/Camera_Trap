@@ -17,8 +17,8 @@ def start_camera():
 	try:
 		camera = PiCamera()
 		camera.resolution = (1920, 1080)
-	except PiCameraError as camerr:
-		log("camera error on startup - " + camerr.message)
+	except PiCameraError:
+		log("camera error on startup")
 		camera.close()
 		quit()
 	return camera
@@ -48,8 +48,8 @@ def main_loop(pir, camera):
 					if os.path.exists(directory) != True:
 						os.mkdir(directory)
 					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
-				except PiCameraError as camerr:
-					log("camera error on start record - " + camerr.message)
+				except PiCameraError:
+					log("camera error on start record")
 					camera.close()
 					start_camera()
 
@@ -64,8 +64,8 @@ def main_loop(pir, camera):
 		if rec_time <= 0 and rec_on:
 			try:
 				camera.stop_recording()
-			except PiCameraError as camerr:
-				log("camera error on stop record - " + camerr.message)
+			except PiCameraError:
+				log("camera error on stop record")
 				camera.close()
 				start_camera()	
 			rec_on = False
