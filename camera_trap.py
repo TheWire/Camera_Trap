@@ -19,7 +19,6 @@ def start_camera():
 		camera.resolution = (1920, 1080)
 	except PiCameraError:
 		log("camera error on startup")
-		camera.close()
 		quit()
 	return camera
 	
@@ -50,7 +49,6 @@ def main_loop(pir, camera):
 					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
 				except PiCameraError:
 					log("camera error on start record")
-					camera.close()
 					start_camera()
 
 				rec_on = True
@@ -66,7 +64,6 @@ def main_loop(pir, camera):
 				camera.stop_recording()
 			except PiCameraError:
 				log("camera error on stop record")
-				camera.close()
 				start_camera()	
 			rec_on = False
 			log("video off")
