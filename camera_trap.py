@@ -5,6 +5,7 @@ from picamera import PiCamera
 from picamera import PiCameraError
 from time import sleep
 
+MOTION_PIN = 14
 MIN_REC_TIME = 60
 INTERVAL = 3
 POLL = 0.1
@@ -17,7 +18,7 @@ def start_camera():
 		camera = PiCamera()
 		camera.resolution = (1920, 1080)
 	except PiCameraError as camerr:
-		log("camera error on startup", camerr)
+		log("camera error on startup - " + camerr)
 		camera.close()
 		quit()
 	return camera
@@ -48,7 +49,7 @@ def main_loop(pir, camera):
 						os.mkdir(directory)
 					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
 				except PiCameraError as camerr:
-					log("camera error on start record", camerr)
+					log("camera error on start record - " + camerr)
 					camera.close()
 					start_camera()
 
@@ -64,7 +65,7 @@ def main_loop(pir, camera):
 			try:
 				camera.stop_recording()
 			except PiCameraError as camerr:
-				log("camera error on stop record", camerr)
+				log("camera error on stop record - " + camerr)
 				camera.close()
 				start_camera()	
 			rec_on = False
@@ -75,7 +76,7 @@ def main_loop(pir, camera):
 
 if __name__ == "__main__":
 	log("starting")
-	pir = MotionSensor(14)		
+	pir = MotionSensor(MOTION_PIN)		
 	log("camera startup")
 	main_loop(pir, start_camera())
 	
