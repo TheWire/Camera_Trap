@@ -1,16 +1,27 @@
 import os
 import datetime
-from gpiozero import MotionSensor
+from gpiozero import MotionSensor, LED
 from picamera import PiCamera
 from picamera import PiCameraError
 from time import sleep
 
+MOTION_PIN = 25
+INFRARED_LED_PIN = 5
 MIN_REC_TIME = 60
 INTERVAL = 3
 POLL = 0.1
 APP_PATH = './'
 VIDEO_PATH = 'video/'
 LOG_PATH = 'logs/'
+
+def infrared_led_on(ir_led):
+	ir_led.on()
+	log("infrared led on")
+
+def infrared_led_off(ir_led):
+	ir_led.off()
+	log("infrared led off")
+
 
 def start_camera():
 	try:
@@ -20,6 +31,7 @@ def start_camera():
 		log("camera error on startup", camerr)
 		camera.close()
 		quit()
+	log("camera startup")
 	return camera
 	
 	
@@ -33,7 +45,7 @@ def log(log_text):
 	logfile.close()
 		
 
-def main_loop(pir, camera):
+def main_loop(pir, camera, infrared):
 	rec_time = 0
 	rec_on = False
 	while True:
@@ -47,8 +59,9 @@ def main_loop(pir, camera):
 					if os.path.exists(directory) != True:
 						os.mkdir(directory)
 					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
+					infrared_led_on(infrared)
 				except PiCameraError as camerr:
-					log("camera error on start record", camerr)
+					log("camera error on start record - " + camerr)
 					camera.close()
 					start_camera()
 
@@ -63,8 +76,9 @@ def main_loop(pir, camera):
 		if rec_time <= 0 and rec_on:
 			try:
 				camera.stop_recording()
+				infrared_led_off(infrared)
 			except PiCameraError as camerr:
-				log("camera error on stop record", camerr)
+				log("camera error on stop record - " + camerr)
 				camera.close()
 				start_camera()	
 			rec_on = False
@@ -75,7 +89,7 @@ def main_loop(pir, camera):
 
 if __name__ == "__main__":
 	log("starting")
-	pir = MotionSensor(14)		
-	log("camera startup")
-	main_loop(pir, start_camera())
+	pir = MotionSensor(MOTION_PIN)
+	infrared = LED(INFRARED_LED_PIN)
+	main_loop(pir, start_camera(), infrared)
 	
