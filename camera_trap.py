@@ -27,9 +27,8 @@ def start_camera():
 	try:
 		camera = PiCamera()
 		camera.resolution = (1920, 1080)
-	except PiCameraError as camerr:
-		log("camera error on startup", camerr)
-		camera.close()
+	except PiCameraError:
+		log("camera error on startup")
 		quit()
 	log("camera startup")
 	return camera
@@ -60,11 +59,9 @@ def main_loop(pir, camera, infrared):
 						os.mkdir(directory)
 					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
 					infrared_led_on(infrared)
-				except PiCameraError as camerr:
-					log("camera error on start record - " + camerr)
-					camera.close()
+				except PiCameraError:
+					log("camera error on start record")
 					start_camera()
-
 				rec_on = True
 				log("video on")
 				
@@ -77,9 +74,8 @@ def main_loop(pir, camera, infrared):
 			try:
 				camera.stop_recording()
 				infrared_led_off(infrared)
-			except PiCameraError as camerr:
-				log("camera error on stop record - " + camerr)
-				camera.close()
+			except PiCameraError:
+				log("camera error on stop record")
 				start_camera()	
 			rec_on = False
 			log("video off")
@@ -92,4 +88,5 @@ if __name__ == "__main__":
 	pir = MotionSensor(MOTION_PIN)
 	infrared = LED(INFRARED_LED_PIN)
 	main_loop(pir, start_camera(), infrared)
+
 	
