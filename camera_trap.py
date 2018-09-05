@@ -24,6 +24,7 @@ def start_camera():
 	try:
 		camera = PiCamera()
 		camera.resolution = (1920, 1080)
+		camera.framerate = 30
 	except PiCameraError:
 		log("camera error on startup")
 		quit()
