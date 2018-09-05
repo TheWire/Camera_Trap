@@ -1,4 +1,6 @@
+import sys
 import os
+import signal
 import datetime
 from gpiozero import MotionSensor, LED
 from picamera import PiCamera
@@ -13,6 +15,10 @@ POLL = 0.1
 APP_PATH = './'
 VIDEO_PATH = 'video/'
 LOG_PATH = 'logs/'
+
+def signal_handler(sig, frame):
+	log("shutdown signal")
+	sys.exit(0)
 
 def infrared_led_on(ir_led):
 	ir_led.on()
@@ -85,6 +91,7 @@ def main_loop(pir, camera, infrared):
 
 if __name__ == "__main__":
 	log("starting")
+	signal.signal(signal.SIGINT, signal_handler)
 	pir = MotionSensor(MOTION_PIN)
 	infrared = LED(INFRARED_LED_PIN)
 	main_loop(pir, start_camera(), infrared)
