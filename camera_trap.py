@@ -9,6 +9,7 @@ from time import sleep
 
 MOTION_PIN = 14
 MIN_REC_TIME = 60
+UPDATE_TIME = 1800
 INTERVAL = 3
 POLL = 0.1
 APP_PATH = './'
@@ -44,6 +45,7 @@ def log(log_text):
 def main_loop(pir, camera):
 	rec_time = 0
 	rec_on = False
+	update_time 
 	while True:
 		if pir.motion_detected:
 			log("motion detected " + str(rec_time)+ 's')
