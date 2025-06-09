@@ -1,90 +1,42 @@
-import sys
-import os
-import signal
-import datetime
-from gpiozero import MotionSensor
-from picamera import PiCamera
-from picamera import PiCameraError
-from time import sleep
+from flask import Flask, Response, render_template
+from picamera2 import Picamera2
+import time
+import cv2
 
-MOTION_PIN = 14
-MIN_REC_TIME = 60
-UPDATE_TIME = 1800
-INTERVAL = 3
-POLL = 0.1
-APP_PATH = './'
-VIDEO_PATH = 'video/'
-LOG_PATH = 'logs/'
+app = Flask(__name__)
 
-def signal_handler(sig, frame):
-	log("shutdown signal")
-	sys.exit(0)
+picam2 = Picamera2()
+camera_config = picam2.create_video_configuration(main={"size": (640, 480)})  # Adjust resolution as needed
+picam2.configure(camera_config)
+picam2.start()
 
+def generate_frames():
+    """Generator function to capture and yield JPEG frames for MJPEG streaming."""
+    while True:
+        # Capture a frame as JPEG
+        frame = picam2.capture_array()
+        # Convert to JPEG format
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        # Yield the frame in MJPEG format
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        time.sleep(0.1)  # Control frame rate (adjust as needed)
 
-def start_camera():
-	try:
-		camera = PiCamera()
-		camera.resolution = (1920, 1080)
-		camera.framerate = 30
-	except PiCameraError:
-		log("camera error on startup")
-		quit()
-	return camera
-	
-	
+@app.route('/video')
+def video():
+    """Stream the video feed as MJPEG."""
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def log(log_text):
-	now = datetime.datetime.now()
-	logfile = open(os.path.expanduser(APP_PATH + LOG_PATH + now.strftime('%Y-%m-%d')), 'a+')
-	output_text = now.strftime('%H:%M:%S') + '-' + log_text
-	print(output_text)
-	logfile.write(output_text + '\n')
-	logfile.close()
-		
+@app.route('/')
+def serve_react():
+    return render_template('index.html')
 
-def main_loop(pir, camera):
-	rec_time = 0
-	rec_on = False
-	update_time 
-	while True:
-		if pir.motion_detected:
-			log("motion detected " + str(rec_time)+ 's')
-			rec_time = MIN_REC_TIME
-			if rec_on == False:
-				try:
-					now = datetime.datetime.now()
-					directory = os.path.expanduser(APP_PATH + VIDEO_PATH + now.strftime('%Y-%m-%d') + '/')
-					if os.path.exists(directory) != True:
-						os.mkdir(directory)
-					camera.start_recording(directory + now.strftime('%H:%M:%S') + '.h264')
+@app.route('/api/<endpoint>')
+def api(endpoint):
+    # Handle API requests
+    return {"message": f"API endpoint: {endpoint}"}
 
-				except PiCameraError:
-					log("camera error on start record")
-					start_camera()
-				rec_on = True
-				log("video on")
-				
-		if rec_on:
-			camera.wait_recording(INTERVAL)
-			rec_time = rec_time - INTERVAL
-		else:
-			sleep(POLL)
-		if rec_time <= 0 and rec_on:
-			try:
-				camera.stop_recording()
-
-			except PiCameraError:
-				log("camera error on stop record")
-				start_camera()	
-			rec_on = False
-			log("video off")
-			
-		
-		
-
-if __name__ == "__main__":
-	log("starting")
-	signal.signal(signal.SIGINT, signal_handler)
-	pir = MotionSensor(MOTION_PIN)
-	main_loop(pir, start_camera())
-
+if __name__ == '__main__':
+    app.run(debug=True)
