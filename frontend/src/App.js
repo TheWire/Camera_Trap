@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import VideoPlayer from './VideoPlayer';
+import VideoPlayer from './component/VideoPlayer';
 
 function App() {
   return (
