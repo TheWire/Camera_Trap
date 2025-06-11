@@ -7,7 +7,7 @@ from ultralytics import YOLO
 app = Flask(__name__)
 
 picam2 = Picamera2()
-camera_config = picam2.create_video_configuration(main={"size": (640, 480)})  # Adjust resolution as needed
+camera_config = picam2.create_video_configuration(main={"size": (640, 480), "format": "RGB888"})  # Adjust resolution as needed
 picam2.configure(camera_config)
 picam2.start()
 
@@ -36,7 +36,10 @@ def generate_frames():
                 cv2.rectangle(frame,
                               (int(box[0]), int(box[1])),
                               (int(box[2]), int(box[3])),
-                              (255, 0, 0), 2)
+                              (0, 255, 0), 1)
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                text = f"{names[int(cls)]} {conf*100:10.2f}%"
+                cv2.putText(frame,text,(int(box[0])+5,int(box[1])+18), font, 0.6,(0, 255, 0),1,cv2.LINE_AA)
 
         # Convert to JPEG format
         _, buffer = cv2.imencode('.jpg', frame)
