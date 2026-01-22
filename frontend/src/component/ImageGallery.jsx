@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import './ImageGallery.css'; // optional - see styles below
+import './ImageGallery.css'; // optional - keep your existing styles
 
 function ImageGallery() {
   const [images, setImages] = useState([]);
@@ -12,7 +12,7 @@ function ImageGallery() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/images', {
+        const response = await fetch('/api/images', {
           headers: {
             'Accept': 'application/json',
           },
@@ -28,9 +28,24 @@ function ImageGallery() {
           throw new Error('Invalid response format - "images" array expected');
         }
 
-        setImages(data.images);
+        // Sort filenames assuming they are unix-timestamp.jpg
+        // Newest first (largest timestamp → most recent)
+        const sortedFilenames = data.images.sort((a, b) => {
+          // Extract the number part before .jpg
+          const getTimestamp = (filename) => {
+            const match = filename.match(/(\d{10,})/); 
+            return match ? Number(match[1]) : 0;
+          };
+
+          const tsA = getTimestamp(a);
+          const tsB = getTimestamp(b);
+          return tsB - tsA; // descending = newest first
+          // return tsA - tsB; // uncomment for oldest first
+        });
+
+        setImages(sortedFilenames);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load images');
+        setError(err.message || 'Failed to load images');
         console.error('Image fetch error:', err);
       } finally {
         setLoading(false);
@@ -66,20 +81,21 @@ function ImageGallery() {
 
   return (
     <div className="image-gallery">
-      {images.map((filename, index) => (
+      {images.map((filename) => (
         <div key={filename} className="gallery-item">
           <img
-            src={`/images/${filename}`}
-            alt={`Image ${index + 1}`}
+            src={`/api/images/${filename}`}
+            alt={`Image ${filename}`}
             loading="lazy"
             onError={(e) => {
-              // Optional: show fallback / broken image style
-              (e.target).style.opacity = '0.5';
-              (e.target).title = 'Image failed to load';
+              e.target.style.opacity = '0.5';
+              e.target.title = 'Image failed to load';
             }}
           />
-          {/* Optional caption */}
-          {/* <p className="image-filename">{filename}</p> */}
+          {/* Optional: show timestamp or filename */}
+          {<p className="image-caption">
+            {new Date(Number(filename.replace('.jpg', '')) * 1000).toLocaleString()}
+          </p>}
         </div>
       ))}
     </div>

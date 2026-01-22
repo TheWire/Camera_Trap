@@ -30,7 +30,7 @@ class Camera():
         self.camera_config["transform"] = libcamera.Transform(hflip=1, vflip=0)
         self.camera.configure(self.camera_config)
         self.output = StreamingOutput()
-        self.camera.set_controls({"AfMode": 2, "AfSpeed": 1})
+        self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous, "AfSpeed": libcamera.controls.AfSpeedEnum.Fast})
 
     def close(self):
         if self.streaming_count > 0.0: 
@@ -58,7 +58,9 @@ class Camera():
             self.camera.stop_recording()
 
     def capture(self, path):
+        self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
         self.camera.capture_file(path)
+        self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous, "AfSpeed": libcamera.controls.AfSpeedEnum.Fast})
 
     def camera_config(self, config):
         with self.camera_lock:

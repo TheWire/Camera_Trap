@@ -16,7 +16,7 @@ export default function TimelapseTrigger() {
     setMessage('Starting timelapse...');
 
     try {
-      const response = await fetch('/timelapse-on', {
+      const response = await fetch('/api/timelapse-on', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ export default function TimelapseTrigger() {
     setMessage('Stopping timelapse...');
 
     try {
-      const response = await fetch('/timelapse-off', {
+      const response = await fetch('/api/timelapse-off', {
         method: 'POST',           // or 'DELETE' — change if your API uses DELETE
         headers: {
           'Content-Type': 'application/json',

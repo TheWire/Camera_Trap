@@ -8,6 +8,7 @@ from threading import Thread
 #import cv2
 #from ultralytics import YOLO
 from camera import Camera
+
 app = Flask(__name__)
 
 #picam2 = Picamera2()
@@ -92,7 +93,9 @@ class Timelapse_Thread(Thread):
             light_off()
             time.sleep(self.interval)
 
-@app.route('/video')
+        print("timelapse end")
+
+@app.route('/api/video')
 def video():
     """Stream the video feed as MJPEG."""
     camera.start_stream()
@@ -105,7 +108,7 @@ def video():
 
     return response
 
-@app.route('/timelapse-on', methods=["POST"])
+@app.route('/api/timelapse-on', methods=["POST"])
 def timelapse():
     global timelapse_thread
     content = request.get_json()
@@ -113,41 +116,44 @@ def timelapse():
     interval = content["interval"] #request.args.get('interval', default=30, type=int)
     duration = content["duration"] #request.args.get('duration', default=15*60, type=int)
     if timelapse_thread is not None:
-        response = jsonify(success=False, message="timelapse already rnning")
-        return response
+        return jsonify(success=False, message="timelapse already running", status=400, mimetype='application/json')
     timelapse_thread = Timelapse_Thread(interval, duration)
     timelapse_thread.start()
     response = jsonify(success=True)
     return response
 
-@app.route('/timelapse-off', methods=["POST"])
+@app.route('/api/timelapse-off', methods=["POST"])
 def timelapse_off():
     global timelapse_thread
-    if timelapse_thread == None:
-        response = jsonify(success=False, message="timelapse not running")
-        return response
-    if timelapse_thread.stopped():
-        response = jsonify(success=False, message="timelapse not running")
-        return response
+    if timelapse_thread is None:
+        return jsonify(success=False, message="timelapse not running", status=400, mimetype='application/json')
+    if timelapse_thread.stopped():       
+        return jsonify(success=False, message="timelapse not running", status=400, mimetype='application/json')
     timelapse_thread.stop()
     timelapse_thread = None
     response = jsonify(success=True)
     return response
 
-@app.route('/')
-def serve_react():
-    return render_template('index.html')
-
-@app.route('/images/<path:filename>')
+@app.route('/api/images/<path:filename>')
 def serve_images(filename):
     return send_from_directory('images', filename)
 
-@app.route('/images')
+@app.route('/api/images')
 def serve_available_images():
     files = [f for f in os.listdir("./images") if os.path.isfile(os.path.join("./images", f))]
     images = [i for i in files if os.path.splitext(i)[1][1:] == "jpg"]
     return jsonify(images=images)
 
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_static(path): 
+    # Otherwise → SPA fallback: serve index.html so React Router can handle it
+    return send_from_directory("./templates", 'index.html')
+
+#@app.route('/')
+#def serve_react():
+    #return render_template('index.html')
     
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, threaded=True)
