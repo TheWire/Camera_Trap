@@ -22,7 +22,6 @@ app = Flask(__name__)
 #threshold = .40
 camera = Camera()
 led = PWMLED(18)
-ldr = LightSensor(27)
 
 timelapse_thread = None
 
@@ -60,8 +59,36 @@ timelapse_thread = None
 #               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
 #        time.sleep(0.1)  # Control frame rate (adjust as needed)
 
+def LDR_value(pin, charge_time_limit=0.005):
+    
+    # Take the pin LOW to discharge the capacitor
+    ldr = OutputDevice(pin=pin, active_high=True, 
+                       initial_value=False)
+    time.sleep(0.1)
+
+    # Configure the pin as an input
+    ldr.close()
+    ldr = InputDevice(pin=pin, pull_up=None,
+                      active_state=True)
+
+    # Wait for the capacitor to recharge, but only up to
+    # the charge time limit
+    lit = 0
+    start = time.time()
+    while True:
+        if time.time() - start >  charge_time_limit:
+            break
+        if ldr.is_active:
+            lit += 1
+
+    ldr.close()
+    return lit
+
 def light_on():
-    if ldr.value == 0:
+    ldr_value = LDR_value(22, 0.01)
+    print(ldr_value)
+    if ldr_value < 5:
+        print("light on")
         led.on()
 
 def light_off():
