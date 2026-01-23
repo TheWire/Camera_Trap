@@ -93,7 +93,6 @@ class Timelapse_Thread(Thread):
             light_off()
             time.sleep(self.interval)
 
-        print("timelapse end")
 
 @app.route('/api/video')
 def video():

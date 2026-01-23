@@ -58,10 +58,13 @@ class Camera():
             self.camera.stop_recording()
 
     def capture(self, path):
-        self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
-        self.camera.capture_file(path)
-        self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous, "AfSpeed": libcamera.controls.AfSpeedEnum.Fast})
-
+        with self.camera_lock:
+            self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
+            request = self.camera.capture_request(flush=True)
+            request.save("main", path)
+            request.release() 
+            self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous, "AfSpeed": libcamera.controls.AfSpeedEnum.Fast})
+            
     def camera_config(self, config):
         with self.camera_lock:
             self.camera.configuration(config)
