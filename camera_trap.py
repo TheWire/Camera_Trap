@@ -1,4 +1,5 @@
 import os
+import numbers
 from flask import Flask, Response, request, render_template, jsonify, send_from_directory
 #from picamera2 import Picamera2
 from gpiozero import MotionSensor, LightSensor, PWMLED, OutputDevice, InputDevice
@@ -115,8 +116,11 @@ class Timelapse_Thread(Thread):
             end_time = time.time() + self.duration
 
         while not self._stop_event.is_set() and time.time() < end_time:
+            print("before light")
             light_on()
+            print("after light")
             camera.capture(f"./images/{time.time()}.jpg")
+            print("after capture")
             light_off()
             time.sleep(self.interval)
 
@@ -134,6 +138,43 @@ def video():
 
     return response
 
+def LDR_value(pin, charge_time_limit=0.005):
+    
+    # Take the pin LOW to discharge the capacitor
+    ldr = OutputDevice(pin=pin, active_high=True, 
+                       initial_value=False)
+    sleep(0.1)
+
+    # Configure the pin as an input
+    ldr.close()
+    ldr = InputDevice(pin=pin, pull_up=None,
+                      active_state=True)
+
+    # Wait for the capacitor to recharge, but only up to
+    # the charge time limit
+    lit = 0
+    start = time()
+    while True:
+        if time() - start >  charge_time_limit:
+            break
+        if ldr.is_active:
+            lit += 1
+
+    ldr.close()
+    return lit
+
+@app.route('/api/light', methods=["post"])
+def light():
+    content = request.get_json()
+    level = content["level"]
+    if level is None \
+        or not isinstance(level, numbers.Number) \
+        or level < 0 \
+        or level > 100:
+            return jsonify(success=False, message="invalid light value", status=400, mimtype="application/json")
+    led.value = level / 100
+    return jsonify(success=True)
+
 @app.route('/api/timelapse-on', methods=["POST"])
 def timelapse():
     global timelapse_thread
@@ -145,8 +186,7 @@ def timelapse():
         return jsonify(success=False, message="timelapse already running", status=400, mimetype='application/json')
     timelapse_thread = Timelapse_Thread(interval, duration)
     timelapse_thread.start()
-    response = jsonify(success=True)
-    return response
+    return jsonify(success=True)
 
 @app.route('/api/timelapse-off', methods=["POST"])
 def timelapse_off():

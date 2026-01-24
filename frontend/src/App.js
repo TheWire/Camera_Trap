@@ -3,7 +3,7 @@ import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
 import VideoPlayer from './component/VideoPlayer';
 import TimelapseTrigger from './component/Timelapse.jsx';
 import ImageGallery from './component/ImageGallery.jsx';
-
+import LightControl from './component/LightControl.jsx';
 function App() {
   return (
     <div className="App">
@@ -12,6 +12,7 @@ function App() {
           <div className='container'>
             <VideoPlayer />
             <TimelapseTrigger />
+            <LightControl />
             <NavLink to='/gallery'>Gallery</NavLink>
           </div>
         } />

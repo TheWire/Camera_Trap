@@ -54,15 +54,22 @@ class Camera():
             self.camera.start_recording(JpegEncoder(), FileOutput(self.output), name="lores")
 
     def stop_recording(self):
+        print("stop recording")
         with self.camera_lock:
-            self.camera.stop_recording()
+            self.camera.stop_encoder()
+        print("end stop recording")
 
     def capture(self, path):
+        print("capture")
         with self.camera_lock:
+            print("in capture")
             self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
+            print("after focus change")
             request = self.camera.capture_request(flush=True)
+            print("after capture")
             request.save("main", path)
-            request.release() 
+            request.release()
+            print("after release")
             self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous, "AfSpeed": libcamera.controls.AfSpeedEnum.Fast})
             
     def camera_config(self, config):
