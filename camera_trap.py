@@ -1,64 +1,19 @@
 import os
 import numbers
 from flask import Flask, Response, request, render_template, jsonify, send_from_directory
-#from picamera2 import Picamera2
 from gpiozero import MotionSensor, LightSensor, PWMLED, OutputDevice, InputDevice
 import time
 import threading
 from threading import Thread
-#import cv2
-#from ultralytics import YOLO
 from camera import Camera
 
 app = Flask(__name__)
 
-#picam2 = Picamera2()
-#camera_config = picam2.create_video_configuration(main={"size": (640, 480), "format": "RGB888"})  # Adjust resolution as needed
 
-#picam2.configure(camera_config)
-#picam2.start()
-
-#model = YOLO("yolo11n.pt")
-#names = model.names
-#threshold = .40
 camera = Camera()
 led = PWMLED(18)
-
+motion_sensor = MotionSensor(23)
 timelapse_thread = None
-
-#def generate_frames():
-#    """Generator function to capture and yield JPEG frames for MJPEG streaming."""
-#    while True:
-#        # Capture a frame as JPEG
-#        frame = picam2.capture_array()
-#        results = model(frame)
-#        annotated = results[0].plot()
-#        boxes = results[0].boxes.xyxy.cpu().tolist()
-#        clss = results[0].boxes.cls.cpu().tolist()
-#        confs = results[0].boxes.conf.cpu().tolist()
-#        if boxes is not None:
-#            # if set(clss) == previous_classes:
-#            #     print("Scene is unchanged, not saving images.")
-#            #     return set(clss)
-#
-#            for box, cls, conf in zip(boxes, clss, confs):
-#                if conf < threshold: # Is confidence under threshold?
-#                    continue
-#                cv2.rectangle(frame,
-#                              (int(box[0]), int(box[1])),
-#                              (int(box[2]), int(box[3])),
-#                              (0, 255, 0), 1)
-#                font = cv2.FONT_HERSHEY_SIMPLEX
-#                text = f"{names[int(cls)]} {conf*100:10.2f}%"
-#                cv2.putText(frame,text,(int(box[0])+5,int(box[1])+18), font, 0.6,(0, 255, 0),1,cv2.LINE_AA)
-#
-#        # Convert to JPEG format
-#        _, buffer = cv2.imencode('.jpg', frame)
-#        frame = buffer.tobytes()
-#        # Yield the frame in MJPEG format
-#        yield (b'--frame\r\n'
-#               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-#        time.sleep(0.1)  # Control frame rate (adjust as needed)
 
 def LDR_value(pin, charge_time_limit=0.005):
     
@@ -116,11 +71,13 @@ class Timelapse_Thread(Thread):
             end_time = time.time() + self.duration
 
         while not self._stop_event.is_set() and time.time() < end_time:
-            print("before light")
             light_on()
-            print("after light")
-            camera.capture(f"./images/{time.time()}.jpg")
-            print("after capture")
+            is_motion = motion_sensor.motion_detected
+            if is_motion:
+                print("motion")
+            print("capturing")
+            camera.capture(f"./images/{time.time()}{'_M' if is_motion else ''}.jpg")
+            print("captured")
             light_off()
             time.sleep(self.interval)
 
