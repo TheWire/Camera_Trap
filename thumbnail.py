@@ -56,7 +56,7 @@ def is_jpeg(file):
 
 def get_filename_from_thumb(thumb):
     base, ext = os.path.splitext(thumb)
-    return f"{base.removesuffix("_thumb")}{ext}"
+    return f"{base.removesuffix('_thumb')}{ext}"
 
 def thumb_name(file):
     base, ext = os.path.splitext(file)
