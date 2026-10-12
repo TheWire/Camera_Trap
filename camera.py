@@ -1,5 +1,7 @@
+import io
 from abc import ABC, abstractmethod
 from threading import Condition
+
 
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
