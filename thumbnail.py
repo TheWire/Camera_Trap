@@ -1,5 +1,4 @@
 import os
-import queue
 from threading import Thread
 import multiprocessing as mp
 from PIL import Image
@@ -67,7 +66,7 @@ def get_files_to_thumb(path, thumbpath):
     thumbnails = os.listdir(thumbpath)
     return [image for image in images if thumb_name(image) not in thumbnails]
 
-class UniqueQueue(mp.queues.Queue):
+class UniqueQueue(mp.Queue):
     def __init__(self, *args, **kwargs):
         ctx = mp.get_context()
         super().__init__(*args, ctx=ctx, **kwargs)
