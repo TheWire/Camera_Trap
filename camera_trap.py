@@ -6,6 +6,7 @@ import time
 import threading
 from threading import Thread
 from camera import Camera
+from thumbnail import Thumbnailer
 
 app = Flask(__name__)
 
@@ -13,7 +14,9 @@ app = Flask(__name__)
 camera = Camera()
 led = PWMLED(18)
 motion_sensor = MotionSensor(23)
+
 timelapse_thread = None
+thumbnailer = Thumbnailer()
 
 def LDR_value(pin, charge_time_limit=0.005):
     
@@ -154,4 +157,6 @@ def serve_static(path):
     #return render_template('index.html')
     
 if __name__ == '__main__':
+    thumbnailer.start()
     app.run(host='0.0.0.0', port=5000, threaded=True)
+    thumbnailer.stop()
