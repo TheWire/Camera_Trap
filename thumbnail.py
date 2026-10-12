@@ -66,30 +66,29 @@ def get_files_to_thumb(path, thumbpath):
     thumbnails = os.listdir(thumbpath)
     return [image for image in images if thumb_name(image) not in thumbnails]
 
+import multiprocessing as mp
+
 class UniqueQueue:
     def __init__(self, *args, **kwargs):
         self._ctx = mp.get_context()
-        
-        self._queue = self._ctx.Queue(*args, **kwargs)
+        self._queue = self._ctx.Manager().Queue(*args, **kwargs)
         
         self._manager = self._ctx.Manager()
-        self._seen_items = self._manager.set()
+        self._seen_items = self._manager.dict()
         self._lock = self._ctx.Lock()
 
     def put(self, obj, block=True, timeout=None):
-        """Adds items only if they aren't already queued."""
         with self._lock:
             if obj not in self._seen_items:
-                self._seen_items.add(obj)
+                self._seen_items[obj] = True
                 self._queue.put(obj, block, timeout)
                 return True
             return False
 
     def get(self, block=True, timeout=None):
-        """Retrieves an item and removes it from tracking."""
         item = self._queue.get(block, timeout)
         with self._lock:
-            self._seen_items.discard(item)
+            self._seen_items.pop(item, None)
         return item
 
     def qsize(self):
