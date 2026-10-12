@@ -11,7 +11,7 @@ class Thumbnailer(Thread):
         self.thumbnail_path = thumbnail_path
         self.thumb_queue = UniqueQueue()
         self.worker = mp.Process(
-            target=self.thumbnail_worker,
+            target=thumbnail_worker,
             args=(self.thumb_queue,),
             daemon=True
         )
