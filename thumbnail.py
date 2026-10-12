@@ -66,27 +66,40 @@ def get_files_to_thumb(path, thumbpath):
     thumbnails = os.listdir(thumbpath)
     return [image for image in images if thumb_name(image) not in thumbnails]
 
-class UniqueQueue(mp.Queue):
+class UniqueQueue:
     def __init__(self, *args, **kwargs):
-        ctx = mp.get_context()
-        super().__init__(*args, ctx=ctx, **kwargs)
+        self._ctx = mp.get_context()
         
-        self._manager = ctx.Manager()
+        self._queue = self._ctx.Queue(*args, **kwargs)
+        
+        self._manager = self._ctx.Manager()
         self._seen_items = self._manager.set()
-        self._lock = ctx.Lock()
+        self._lock = self._ctx.Lock()
 
     def put(self, obj, block=True, timeout=None):
-        """Overrides put() to only add items if they aren't already queued."""
+        """Adds items only if they aren't already queued."""
         with self._lock:
             if obj not in self._seen_items:
                 self._seen_items.add(obj)
-                super().put(obj, block, timeout)
+                self._queue.put(obj, block, timeout)
                 return True
             return False
 
     def get(self, block=True, timeout=None):
-        """Overrides get() to remove the item from tracking upon extraction."""
-        item = super().get(block, timeout)
+        """Retrieves an item and removes it from tracking."""
+        item = self._queue.get(block, timeout)
         with self._lock:
             self._seen_items.discard(item)
         return item
+
+    def qsize(self):
+        return self._queue.qsize()
+
+    def empty(self):
+        return self._queue.empty()
+
+    def full(self):
+        return self._queue.full()
+
+    def close(self):
+        self._queue.close()
