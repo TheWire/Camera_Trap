@@ -58,7 +58,6 @@ class Timelapse_Thread(Thread):
     def __init__(self, interval, duration):
         super().__init__()
         self._stop_event = threading.Event()
-
         self.interval = interval
         self.duration = duration
 

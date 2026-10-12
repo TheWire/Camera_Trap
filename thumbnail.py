@@ -1,6 +1,7 @@
 import os
 import multiprocessing as mp
 import queue
+import pathlib
 from threading import Thread, Event
 from PIL import Image
 
@@ -58,7 +59,7 @@ def thumbnail_worker(path, queue: mp.Queue, thumb_size=(400, 300), quality=85):
             print(f"[thumb] error on {path}: {e}")
 
 def is_jpeg(file):
-    ext = str.lower(file.suffix)
+    ext = str.lower(pathlib.Path(file).suffix)
     return ext == "jpg" or ext == "jpeg"
 
 def get_filename_from_thumb(thumb):
