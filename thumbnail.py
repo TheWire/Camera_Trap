@@ -1,13 +1,14 @@
 import os
 import multiprocessing as mp
 import queue
-from threading import Thread
+from threading import Thread, Event
 from PIL import Image
 
 
 class Thumbnailer(Thread):
     def __init__(self, path, thumbnail_path):
         super().__init__()
+        self._stop_event = Event()
         self.path = path
         self.thumbnail_path = thumbnail_path
         self.thumb_queue = UniqueQueue()
@@ -16,6 +17,12 @@ class Thumbnailer(Thread):
             args=(self.thumb_queue,),
             daemon=True
         )
+
+    def stop(self):
+        self._stop_event.set()
+        
+    def stopped(self):
+         return self._stop_event.is_set()
         
 
     def run(self):
