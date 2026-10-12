@@ -16,7 +16,7 @@ led = PWMLED(18)
 motion_sensor = MotionSensor(23)
 
 timelapse_thread = None
-thumbnailer = Thumbnailer()
+thumbnailer = Thumbnailer("images", "thumbs")
 
 def LDR_value(pin, charge_time_limit=0.005):
     
