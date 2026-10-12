@@ -33,7 +33,7 @@ class Thumbnailer(Thread):
                 try:
                     for image in get_files_to_thumb(self.path, self.thumbnail_path):
                         self.thumb_queue.put_nowait(os.path.join(self.path, image))
-                except queue.Full:
+                except Full:
                     print("thumbnail queue full skipping this one")
 
         finally:
