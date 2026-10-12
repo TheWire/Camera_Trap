@@ -1,6 +1,7 @@
 import os
-from threading import Thread
 import multiprocessing as mp
+import queue
+from threading import Thread
 from PIL import Image
 
 
@@ -24,7 +25,7 @@ class Thumbnailer(Thread):
                 try:
                     for image in get_files_to_thumb(self.path, self.thumbnail_path):
                         self.thumb_queue.put_nowait(os.path.join(self.path, image))
-                except mp.Queue.Full:
+                except queue.Full:
                     print("thumbnail queue full skipping this one")
 
         finally:
