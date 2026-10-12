@@ -1,6 +1,6 @@
 import os
 import multiprocessing as mp
-import queue
+from queue import Full
 import pathlib
 from threading import Thread, Event
 from PIL import Image
@@ -60,7 +60,7 @@ def thumbnail_worker(path, queue: mp.Queue, thumb_size=(400, 300), quality=85):
 
 def is_jpeg(file):
     ext = str.lower(pathlib.Path(file).suffix)
-    return ext == "jpg" or ext == "jpeg"
+    return ext == ".jpg" or ext == ".jpeg"
 
 def get_filename_from_thumb(thumb):
     base, ext = os.path.splitext(thumb)
@@ -75,13 +75,11 @@ def get_files_to_thumb(path, thumbpath):
     thumbnails = os.listdir(thumbpath)
     return [image for image in images if thumb_name(image) not in thumbnails]
 
-import multiprocessing as mp
-
 class UniqueQueue:
     def __init__(self, *args, **kwargs):
         self._ctx = mp.get_context()
-        self._queue = self._ctx.Manager().Queue(*args, **kwargs)
-        
+        self._queue = self._ctx.Queue(*args, **kwargs)
+
         self._manager = self._ctx.Manager()
         self._seen_items = self._manager.dict()
         self._lock = self._ctx.Lock()
@@ -89,9 +87,13 @@ class UniqueQueue:
     def put(self, obj, block=True, timeout=None):
         with self._lock:
             if obj not in self._seen_items:
-                self._seen_items[obj] = True
-                self._queue.put(obj, block, timeout)
-                return True
+                try:
+                    self._queue.put(obj, block=block, timeout=timeout)
+                    self._seen_items[obj] = True
+                    return True
+                except Full:
+                    print("thumbnail queue full skipping this one")
+                    return False
             return False
 
     def get(self, block=True, timeout=None):
