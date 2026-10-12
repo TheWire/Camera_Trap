@@ -9,7 +9,7 @@ class Thumbnailer(Thread):
         super().__init__()
         self.path = path
         self.thumbnail_path = thumbnail_path
-        self.thumb_queue = mp.UniqueQueue()
+        self.thumb_queue = UniqueQueue()
         self.worker = mp.Process(
             target=self.thumbnail_worker,
             args=(self.thumb_queue,),
