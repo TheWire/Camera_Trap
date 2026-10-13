@@ -47,7 +47,7 @@ def thumbnail_worker(thumb_path, queue: mp.Queue, thumb_size=(400, 300), quality
         if path is None:     
             break
         try:
-            base, ext = os.path.splitext(path)
+            base, ext = os.path.splitext(os.path.basename(path))
             thumb = os.path.join(thumb_path, f"{base}_thumb{ext}")
 
             if os.path.exists(thumb):
