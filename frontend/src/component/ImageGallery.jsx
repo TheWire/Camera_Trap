@@ -12,7 +12,7 @@ function ImageGallery() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/api/images', {
+        const response = await fetch('/api/thumbs', {
           headers: {
             'Accept': 'application/json',
           },
@@ -83,19 +83,25 @@ function ImageGallery() {
     <div className="image-gallery">
       {images.map((filename) => (
         <div key={filename} className="gallery-item">
-          <img
-            src={`/api/images/${filename}`}
-            alt={`Image ${filename}`}
-            loading="lazy"
-            onError={(e) => {
-              e.target.style.opacity = '0.5';
-              e.target.title = 'Image failed to load';
-            }}
-          />
-          {/* Optional: show timestamp or filename */}
-          {<p className="image-caption">
+          <a
+            href={`/api/images/${filename}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View full size"
+          >
+            <img
+              src={`/api/thumbs/${filename}`}
+              alt={`Image ${filename}`}
+              loading="lazy"
+              onError={(e) => {
+                e.target.style.opacity = '0.5';
+                e.target.title = 'Image failed to load';
+              }}
+            />
+          </a>
+          <p className="image-caption">
             {new Date(Number(filename.replace('.jpg', '')) * 1000).toLocaleString()}
-          </p>}
+          </p>
         </div>
       ))}
     </div>

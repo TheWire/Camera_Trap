@@ -145,6 +145,16 @@ def serve_available_images():
     images = [i for i in files if os.path.splitext(i)[1][1:] == "jpg"]
     return jsonify(images=images)
 
+@app.route('/api/thumbs/<path:filename>')
+def serve_thumbs(filename):
+    return send_from_directory('thumbs', filename)
+
+@app.route('/api/thumbs')
+def serve_available_thumbs():
+    files = [f for f in os.listdir("./thumbs") if os.path.isfile(os.path.join("./thumbs", f))]
+    images = [i for i in files if os.path.splitext(i)[1][1:] == "jpg"]
+    return jsonify(images=images)
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

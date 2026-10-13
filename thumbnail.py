@@ -40,11 +40,10 @@ class Thumbnailer(Thread):
             self.thumb_queue.put(None)
             self.worker.join(timeout=5)
 
-
-def thumbnail_worker(thumb_path, queue: mp.Queue, thumb_size=(400, 300), quality=85):
+def thumbnail_worker(thumb_path, queue: mp.Queue, scale=0.25, quality=85):
     while True:
-        path = queue.get()          
-        if path is None:     
+        path = queue.get()
+        if path is None:
             break
         try:
             base, ext = os.path.splitext(os.path.basename(path))
@@ -53,7 +52,10 @@ def thumbnail_worker(thumb_path, queue: mp.Queue, thumb_size=(400, 300), quality
             if os.path.exists(thumb):
                 continue
             with Image.open(path) as img:
-                img.thumbnail(thumb_size, Image.Resampling.LANCZOS)
+                original_width, original_height = img.size
+                new_width = max(1, int(round(original_width * scale)))
+                new_height = max(1, int(round(original_height * scale)))
+                img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
                 img.save(thumb, "JPEG", quality=quality, optimize=True)
         except Exception as e:
             print(f"[thumb] error on {path}: {e}")
