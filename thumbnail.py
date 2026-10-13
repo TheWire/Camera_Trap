@@ -15,7 +15,7 @@ class Thumbnailer(Thread):
         self.thumb_queue = UniqueQueue()
         self.worker = mp.Process(
             target=thumbnail_worker,
-            args=(path, self.thumb_queue,),
+            args=(thumbnail_path, self.thumb_queue,),
             daemon=True
         )
 
@@ -41,20 +41,20 @@ class Thumbnailer(Thread):
             self.worker.join(timeout=5)
 
 
-def thumbnail_worker(path, queue: mp.Queue, thumb_size=(400, 300), quality=85):
+def thumbnail_worker(thumb_path, queue: mp.Queue, thumb_size=(400, 300), quality=85):
     while True:
         path = queue.get()          
         if path is None:     
             break
         try:
             base, ext = os.path.splitext(path)
-            thumb_path = f"{base}_thumb{ext}"
+            thumb = os.path.join(thumb_path, f"{base}_thumb{ext}")
 
-            if os.path.exists(thumb_path):
+            if os.path.exists(thumb):
                 continue
             with Image.open(path) as img:
                 img.thumbnail(thumb_size, Image.Resampling.LANCZOS)
-                img.save(thumb_path, "JPEG", quality=quality, optimize=True)
+                img.save(thumb, "JPEG", quality=quality, optimize=True)
         except Exception as e:
             print(f"[thumb] error on {path}: {e}")
 
