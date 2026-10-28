@@ -23,6 +23,7 @@ export default function LiveView({ onStartTimelapse }) {
         <CameraView
           recording={recording}
           info={`${settings.resolution} • ${settings.frameRate}`}
+          streamUrl={'/api/video'}
         />
         <CameraControls
           recording={recording}
