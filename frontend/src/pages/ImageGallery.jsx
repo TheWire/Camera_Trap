@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './ImageGallery.css'; // optional - keep your existing styles
 
-function ImageGallery() {
+export default function ImageGallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -107,5 +107,3 @@ function ImageGallery() {
     </div>
   );
 }
-
-export default ImageGallery;
