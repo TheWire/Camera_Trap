@@ -65,7 +65,7 @@ class Camera():
             print("in capture")
             self.camera.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
             print("after focus change")
-            request = self.camera.capture_request(flush=True)
+            request = self.camera.capture_request()
             print("after capture")
             request.save("main", path)
             request.release()
