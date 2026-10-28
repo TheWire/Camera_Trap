@@ -5,20 +5,20 @@ import NavTabs from "./component/NavTabs";
 import LiveView from "./pages/LiveView";
 import ImageGallery from "./pages/ImageGallery";
 
-const TABS = ["Live View", "Gallery", "Timelapse", "Settings"];
-
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Live View");
+
+  const pages = {
+    "Live View": <LiveView onStartTimelapse={() => setActiveTab("Timelapse")} />,
+    "Gallery": <ImageGallery />,
+  };
 
   return (
     <div className="container">
       <Header online />
-      <NavTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
-      {activeTab === "Live View" ? (
-        <LiveView onStartTimelapse={() => setActiveTab("Timelapse")} />
-      ) : (
-        // Replace with <Gallery />, <Timelapse />, <Settings /> as you build them
-        <ImageGallery />,
+      <NavTabs tabs={Object.keys(pages)} active={activeTab} onChange={setActiveTab} />
+      {}
+      {pages[activeTab] ?? (
         <main className="main-content placeholder">{activeTab} page goes here</main>
       )}
     </div>
