@@ -1,8 +1,8 @@
-import { useState } from "react";
-import CameraView from "../component/CameraView";
-import CameraControls from "../component/CameraControls";
-import QuickSettings from "../component/QuickSettings";
-import ActivityStats from "../component/ActivityStats";
+import { useEffect, useState } from "react";
+import CameraView from "../components/CameraView";
+import CameraControls from "../components/CameraControls";
+import QuickSettings from "../components/QuickSettings";
+import ActivityStats from "../components/ActivityStats";
 
 export default function LiveView({ onStartTimelapse }) {
   const [recording, setRecording] = useState(false);
@@ -14,6 +14,30 @@ export default function LiveView({ onStartTimelapse }) {
     frameRate: "30 FPS",
   });
 
+  const [capturing, setCapturing] = useState(false);
+  const [notice, setNotice] = useState(null); // { type: "success" | "error", text }
+
+  // Clear the status message after a few seconds
+  useEffect(() => {
+    if (!notice) return;
+    const id = setTimeout(() => setNotice(null), 3000);
+    return () => clearTimeout(id);
+  }, [notice]);
+
+  const handleQuickCapture = async () => {
+    if (capturing) return;
+    setCapturing(true);
+    try {
+      const res = await fetch("/api/quick-capture", { method: "POST" });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      setNotice({ type: "success", text: "Photo captured" });
+    } catch (err) {
+      setNotice({ type: "error", text: "Capture failed. Check the camera connection and try again." });
+    } finally {
+      setCapturing(false);
+    }
+  };
+
   const updateSetting = (key, value) =>
     setSettings((prev) => ({ ...prev, [key]: value }));
 
@@ -23,14 +47,19 @@ export default function LiveView({ onStartTimelapse }) {
         <CameraView
           recording={recording}
           info={`${settings.resolution} • ${settings.frameRate}`}
-          streamUrl={'/api/video'}
         />
+        {notice && (
+          <div className={`toast ${notice.type}`} role="status">
+            {notice.text}
+          </div>
+        )}
         <CameraControls
           recording={recording}
           lightOn={lightOn}
           onToggleRecording={() => setRecording((r) => !r)}
           onToggleLight={() => setLightOn((l) => !l)}
-          onTakePhoto={() => console.log("photo")}
+          capturing={capturing}
+          onTakePhoto={handleQuickCapture}
           onDownload={() => console.log("download")}
         />
       </section>

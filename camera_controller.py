@@ -148,7 +148,7 @@ class CameraController():
         return self._configuration_lock.name
         
     def capture(self, path: str):
-        self.camera.capture()
+        self.camera.capture(path)
 
     def start_recording(self):
         self.camera.start_recording()

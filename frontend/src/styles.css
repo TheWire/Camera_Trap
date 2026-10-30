@@ -45,6 +45,10 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px s
 .control-btn.primary:hover { transform: scale(1.05); box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4); }
 .control-btn.secondary { background: #2d3748; color: #e8eaed; }
 .control-btn.secondary:hover { background: #374151; transform: translateY(-2px); }
+.control-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.toast { padding: 0.625rem 1rem; text-align: center; font-size: 0.875rem; font-weight: 500; }
+.toast.success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.toast.error { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 .control-btn.active { background: #10b981; color: #fff; }
 
 /* Side panel */

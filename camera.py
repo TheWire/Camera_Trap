@@ -14,6 +14,7 @@ class StreamingOutput(io.BufferedIOBase):
             self.condition.notify_all()
 
 class Camera(ABC):
+    @abstractmethod
     def __init__(self):
         pass
 

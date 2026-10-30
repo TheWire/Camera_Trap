@@ -1,60 +1,25 @@
 import os
 import numbers
-from flask import Flask, Response, request, render_template, jsonify, send_from_directory
-from gpiozero import MotionSensor, LightSensor, PWMLED, OutputDevice, InputDevice
+from flask import Flask, Response, request, jsonify, send_from_directory
 import time
 import threading
 from threading import Thread
-from camera import Camera
 from pi_camera import PiCamera
 from camera_controller import CameraController
 from thumbnail import Thumbnailer
+from hardware import Device, HardwareException, HardWareExceptionCode
+from pi_hardware import PiHardware
 
 app = Flask(__name__)
 
 
 pi_camera = PiCamera()
 camera = CameraController(pi_camera)
-led = PWMLED(18)
-motion_sensor = MotionSensor(23)
+pin_config = {Device.light: 18, Device.motion: 23, Device.light_sensor: 22}
+hardware = PiHardware(pin_config)
 
 timelapse_thread = None
 thumbnailer = Thumbnailer("images", "thumbs")
-
-def LDR_value(pin, charge_time_limit=0.005):
-    
-    # Take the pin LOW to discharge the capacitor
-    ldr = OutputDevice(pin=pin, active_high=True, 
-                       initial_value=False)
-    time.sleep(0.1)
-
-    # Configure the pin as an input
-    ldr.close()
-    ldr = InputDevice(pin=pin, pull_up=None,
-                      active_state=True)
-
-    # Wait for the capacitor to recharge, but only up to
-    # the charge time limit
-    lit = 0
-    start = time.time()
-    while True:
-        if time.time() - start >  charge_time_limit:
-            break
-        if ldr.is_active:
-            lit += 1
-
-    ldr.close()
-    return lit
-
-def light_on():
-    ldr_value = LDR_value(22, 0.01)
-    print(ldr_value)
-    if ldr_value < 5:
-        print("light on")
-        led.on()
-
-def light_off():
-    led.off()
 
 class Timelapse_Thread(Thread):
     def __init__(self, interval, duration):
@@ -76,14 +41,14 @@ class Timelapse_Thread(Thread):
             end_time = time.time() + self.duration
 
         while not self._stop_event.is_set() and time.time() < end_time:
-            light_on()
-            is_motion = motion_sensor.motion_detected
+            hardware.light_on(100)
+            is_motion = hardware.motion_detected
             if is_motion:
                 print("motion")
             print("capturing")
             camera.capture(f"./images/{time.time()}{'_M' if is_motion else ''}.jpg")
             print("captured")
-            light_off()
+            hardware.light_off
             time.sleep(self.interval)
 
 
@@ -104,12 +69,12 @@ def video():
 def light():
     content = request.get_json()
     level = content["level"]
-    if level is None \
-        or not isinstance(level, numbers.Number) \
-        or level < 0 \
-        or level > 100:
+    try:
+        hardware.light_on(level)
+    except HardwareException as e:
+        if e.code == HardWareExceptionCode.invalid_light_level:
             return jsonify(success=False, message="invalid light value", status=400, mimtype="application/json")
-    led.value = level / 100
+        return jsonify(success=False, message="error setting light level", status=500, mimtype="application/json")
     return jsonify(success=True)
 
 @app.route('/api/timelapse-on', methods=["POST"])
@@ -140,6 +105,15 @@ def timelapse_off():
 @app.route('/api/images/<path:filename>')
 def serve_images(filename):
     return send_from_directory('images', filename)
+
+@app.route('/api/quick-capture', methods=["POST"])
+def quick_capture_image():
+    try:
+        camera.capture("./images/captures")
+    except:
+        return jsonify(success=False, message="capture failed", status=400, mimetype='application/json')
+    response = jsonify(success=True)
+    return response
 
 @app.route('/api/images')
 def serve_available_images():
