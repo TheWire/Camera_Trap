@@ -7,12 +7,14 @@ import threading
 from threading import Thread
 from camera import Camera
 from pi_camera import PiCamera
+from camera_controller import CameraController
 from thumbnail import Thumbnailer
 
 app = Flask(__name__)
 
 
-camera = PiCamera()
+pi_camera = PiCamera()
+camera = CameraController(pi_camera)
 led = PWMLED(18)
 motion_sensor = MotionSensor(23)
 
