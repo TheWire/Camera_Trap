@@ -48,7 +48,7 @@ class Timelapse_Thread(Thread):
             print("capturing")
             camera.capture(f"./images/{time.time()}{'_M' if is_motion else ''}.jpg")
             print("captured")
-            hardware.light_off
+            hardware.light_off()
             time.sleep(self.interval)
 
 

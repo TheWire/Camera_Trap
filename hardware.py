@@ -32,6 +32,7 @@ class Hardware(ABC):
     def light_off(self):
         pass
 
+    @property
     @abstractmethod
     def light_level(self) -> int:
         pass
@@ -40,6 +41,7 @@ class Hardware(ABC):
     def ldr_value(self, charge_time_limit=0.005) -> int:
         pass
 
+    @property
     @abstractmethod
     def motion_detected(self) -> bool:
         pass

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./styles.css";
-import Header from "./component/Header";
-import NavTabs from "./component/NavTabs";
+import Header from "./components/Header";
+import NavTabs from "./components/NavTabs";
 import LiveView from "./pages/LiveView";
 import ImageGallery from "./pages/ImageGallery";
 
